@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset Vite defaults */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: block;
+  background: transparent;
+  color: inherit;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+@layer base {
+  button {
+    border-radius: 0;
+    border: none;
+    padding: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  button:focus, button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+/* Serif utility */
+.font-serif {
+  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+}
+
+/* VexFlow SVG — inherits color from parent */
+.stave-renderer svg {
+  overflow: visible;
+  display: block;
+}
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Tab numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
