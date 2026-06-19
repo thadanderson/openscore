@@ -1,16 +1,44 @@
-# React + Vite
+# OpenScore
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based **generator for open-instrumentation guided-improvisation prompts**.
 
-Currently, two official plugins are available:
+Describe an ensemble and an expressive intent, and OpenScore composes a guided-improvisation score — **written instructions**, with the occasional **abstract graphic** to interpret — ready to read on screen by live musicians. There is no staff notation and no fixed pitch content; everything is generated from your input and nothing is stored.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What it does
 
-## React Compiler
+You set four things:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Ensemble** — how many voices / players (any instruments; the prompt is open)
+- **Character** — a mood (8 options, e.g. meditative, turbulent, ceremonial, nocturnal) and an energy level
+- **Structure** — number of sections and approximate total length
+- **Constraints** — pitch material (described in words), dynamic range, amount of silence, and optional extended techniques
 
-## Expanding the ESLint configuration
+OpenScore then generates a multi-section score. Each section is primarily written text; some sections also include an abstract graphic score for free interpretation. It opens in a full-screen, readable performance view.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Generation is **seeded**, so any prompt — text and graphics — is reproducible and shareable from its seed.
+
+## Quick start
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # produces dist/index.html
+```
+
+### Single-file distribution
+
+`npm run build` bundles the entire app into one self-contained `dist/index.html` (~1.4 MB). It runs with **no server** — open it directly in any browser (`file://`) or hand the single file to a musician. This is intentional and the reason the app uses `HashRouter` rather than `BrowserRouter`.
+
+## Performance view controls
+
+- `←` / `→` — navigate sections
+- `Space` — pause / resume the section timer
+- `Esc` — return to the generator
+
+## Tech stack
+
+React 19 · Vite 7 · Tailwind CSS v4 · React Router v7 (`HashRouter`) · `vite-plugin-singlefile`. No music-notation library — graphics are hand-rolled SVG.
+
+## Project notes
+
+See [CLAUDE.md](CLAUDE.md) for architecture, the generation engine (`src/utils/promptLogic.js`), the graphic-score generator (`buildVisual` + `GraphicScore.jsx`), and the generated composition data shape.

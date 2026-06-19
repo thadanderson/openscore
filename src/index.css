@@ -1,9 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&display=swap');
 
 @import "tailwindcss";
 
+/* Two typefaces, two roles:
+   - sans  → the interface (system UI font; consistent, no external load)
+   - serif → display & score text (EB Garamond, the one webfont) */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+}
+
 :root {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -40,26 +48,3 @@ html, body, #root {
   }
 }
 
-/* Serif utility */
-.font-serif {
-  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
-}
-
-/* VexFlow SVG — inherits color from parent */
-.stave-renderer svg {
-  overflow: visible;
-  display: block;
-}
-
-/* Line clamp utility */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Tab numbers */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}

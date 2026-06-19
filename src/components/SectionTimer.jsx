@@ -56,14 +56,14 @@ export default function SectionTimer({ durationNote, running = true, onReset }) 
   const isApproaching = upper < Infinity && elapsed >= upper * 0.8;
   const isOver = upper < Infinity && elapsed > upper;
 
-  let colorClass = 'text-stone-300';
-  if (isOver) colorClass = 'text-red-400';
-  else if (isApproaching) colorClass = 'text-amber-400';
+  let colorClass = 'text-stone-700';
+  if (isOver) colorClass = 'text-red-600';
+  else if (isApproaching) colorClass = 'text-amber-600';
 
   return (
     <div className="flex items-center gap-3 select-none">
       <span
-        className={`font-mono text-2xl font-light tabular-nums ${colorClass} transition-colors duration-1000 ${
+        className={`text-2xl font-light tabular-nums ${colorClass} transition-colors duration-1000 ${
           isApproaching && !isOver ? 'animate-pulse' : ''
         }`}
       >
