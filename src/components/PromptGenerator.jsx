@@ -98,14 +98,14 @@ export default function PromptGenerator() {
         </p>
         <p className="text-stone-500 mt-2 max-w-2xl">
           Use the following parameters to set the ensemble, character, shape, and other
-          constraints. /OpenScore composes a guided-improvisation score of written instructions,
-          with the occasional graphic to interpret, ready to read on screen.
+          performance elements. OpenScore creates a guided-improvisation score of written
+          instructions, with the occasional visual graphics to interpret, ready to read on screen.
         </p>
       </header>
 
       <main className="px-8 py-10 max-w-4xl space-y-12">
         {/* ── Ensemble ── */}
-        <Section title="1 · Ensemble">
+        <Section title="1 — Ensemble">
           <Field label="Voices / players">
             <div className="flex items-center gap-4">
               <Stepper value={voiceCount} min={1} max={12} onChange={setVoiceCount} />
@@ -120,7 +120,7 @@ export default function PromptGenerator() {
         </Section>
 
         {/* ── Character ── */}
-        <Section title="2 · Character">
+        <Section title="2 — Character">
           <Field label="Mood">
             <CardChoice
               options={Object.entries(MOODS).map(([k, v]) => ({ key: k, label: v.label }))}
@@ -138,7 +138,7 @@ export default function PromptGenerator() {
         </Section>
 
         {/* ── Structure ── */}
-        <Section title="3 · Duration & structure">
+        <Section title="3 — Duration & structure">
           <div className="flex flex-wrap gap-12">
             <Field label="Sections">
               <Stepper value={sectionCount} min={1} max={10} onChange={setSectionCount} />
@@ -153,7 +153,7 @@ export default function PromptGenerator() {
         </Section>
 
         {/* ── Constraints ── */}
-        <Section title="4 · Constraints & techniques">
+        <Section title="4 — Constraints & techniques">
           <Field label="Pitch material">
             <CardChoice
               options={Object.entries(PITCH_SETS).map(([k, v]) => ({ key: k, label: v.label }))}
@@ -246,7 +246,7 @@ export default function PromptGenerator() {
 function Section({ title, children }) {
   return (
     <section>
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-400 mb-5">
+      <h2 className="text-lg font-semibold uppercase tracking-wider text-stone-800 mb-6 pb-2 border-b border-stone-300">
         {title}
       </h2>
       <div className="space-y-6">{children}</div>
