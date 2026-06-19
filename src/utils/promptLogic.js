@@ -561,13 +561,17 @@ export function generatePrompt(input) {
     });
   }
 
-  const pitchLabels = selectedPitchSets.map((k) => PITCH_SETS[k].label);
-  const pitchDesc = pitchLabels.length === 1
-    ? `${pitchLabels[0].toLowerCase()} pitch material`
-    : `varied pitch material (${pitchLabels.join(', ').toLowerCase()})`;
+  // Short, lowercase names for prose/tags — drop any "(parenthetical)" so
+  // e.g. "Free (any pitch)" reads as just "free".
+  const pitchNames = selectedPitchSets.map(
+    (k) => PITCH_SETS[k].label.replace(/\s*\([^)]*\)/g, '').toLowerCase()
+  );
+  const pitchDesc = pitchNames.length === 1
+    ? `${pitchNames[0]} pitch material`
+    : `varied pitch material: ${pitchNames.join(', ')}`;
   const tags = [...new Set([
     ...moodDef.tags,
-    ...pitchLabels.map((l) => l.toLowerCase()),
+    ...pitchNames,
     `${energy} energy`,
     'generated',
   ])];
