@@ -41,7 +41,7 @@ export default function PromptGenerator() {
   const [totalMinutes, setTotalMinutes] = useState(9);
 
   // ── Constraints ──
-  const [pitchSet, setPitchSet] = useState('free');
+  const [pitchSets, setPitchSets] = useState(() => new Set(['free']));
   const [dynLo, setDynLo] = useState(1);
   const [dynHi, setDynHi] = useState(4);
   const [silenceRatio, setSilenceRatio] = useState(0.3);
@@ -49,6 +49,14 @@ export default function PromptGenerator() {
 
   function toggleTechnique(key) {
     setTechniques((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  function togglePitchSet(key) {
+    setPitchSets((prev) => {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
@@ -65,7 +73,7 @@ export default function PromptGenerator() {
       energy,
       sectionCount,
       totalMinutes,
-      pitchSet,
+      pitchSets: [...pitchSets],
       dynamicRange: [lo, hi],
       silenceRatio,
       techniques: [...techniques],
@@ -154,12 +162,17 @@ export default function PromptGenerator() {
 
         {/* ── Constraints ── */}
         <Section title="4 — Constraints & techniques">
-          <Field label="Pitch material">
-            <CardChoice
+          <Field label="Pitch material (select one or more)">
+            <CardMultiChoice
               options={Object.entries(PITCH_SETS).map(([k, v]) => ({ key: k, label: v.label }))}
-              value={pitchSet}
-              onChange={setPitchSet}
+              selected={pitchSets}
+              onToggle={togglePitchSet}
             />
+            {pitchSets.size > 1 && (
+              <p className="text-stone-400 text-xs mt-2">
+                Sections will vary between the selected collections.
+              </p>
+            )}
           </Field>
 
           <Field label={`Dynamic range — ${DYNAMIC_LADDER[Math.min(dynLo, dynHi)]} to ${DYNAMIC_LADDER[Math.max(dynLo, dynHi)]}`}>
@@ -228,7 +241,7 @@ export default function PromptGenerator() {
         <div className="border-t border-stone-200 pt-8">
           <button
             onClick={handleGenerate}
-            className="bg-stone-900 text-stone-50 px-10 py-4 text-lg font-serif hover:bg-stone-700 transition-colors"
+            className="bg-stone-900 text-stone-50 px-10 py-4 text-lg font-medium hover:bg-stone-700 transition-colors"
           >
             Generate Performance Prompt →
           </button>
@@ -274,7 +287,7 @@ function Stepper({ value, min, max, onChange }) {
       >
         −
       </button>
-      <span className="text-2xl font-serif w-12 text-center">{value}</span>
+      <span className="text-2xl w-12 text-center tabular-nums">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
         className="w-10 h-10 rounded border border-stone-300 hover:border-stone-500 text-xl flex items-center justify-center transition-colors"
@@ -295,6 +308,27 @@ function CardChoice({ options, value, onChange }) {
           onClick={() => onChange(opt.key)}
           className={`px-4 py-2 text-sm border rounded transition-colors ${
             value === opt.key
+              ? 'bg-stone-900 text-stone-50 border-stone-900'
+              : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CardMultiChoice({ options, selected, onToggle }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          type="button"
+          onClick={() => onToggle(opt.key)}
+          className={`px-4 py-2 text-sm border rounded transition-colors ${
+            selected.has(opt.key)
               ? 'bg-stone-900 text-stone-50 border-stone-900'
               : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
           }`}

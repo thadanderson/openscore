@@ -193,6 +193,24 @@ export default function PerformanceView() {
           </div>
         )}
 
+        {/* Per-voice instructions — present only on some sections */}
+        {currentSection?.voiceInstructions?.length > 0 && (
+          <div className="mt-10 max-w-3xl">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3">
+              Individual voices
+            </h3>
+            <ul className="space-y-2">
+              {currentSection.voiceInstructions.map((v) => (
+                <li key={v.label} className="text-stone-700 leading-relaxed">
+                  <span className="font-serif text-stone-900">{v.label}</span>
+                  <span className="text-stone-400"> — </span>
+                  {v.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Instruction blocks */}
         {blocks.length > 0 && (
           <div className="mt-10 border-t border-stone-200 pt-6 space-y-4 max-w-3xl">

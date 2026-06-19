@@ -40,6 +40,15 @@ export function randomSeed() {
 const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 const chance = (rng, p) => rng() < p;
 const range = (rng, lo, hi) => lo + rng() * (hi - lo);
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const shuffle = (rng, arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 // ─────────────────────────────────────────────────────────────────────────
 // Vocabularies — the building blocks of generation. These are exported so the
@@ -395,6 +404,48 @@ function silenceText(ratio) {
   return 'Silence dominates — each sound is a rare, deliberate event.';
 }
 
+/** Instrument-agnostic per-voice roles, assigned when a section breaks out
+ *  individual instructions for each player. */
+const VOICE_ROLES = [
+  'sustain a long drone, changing pitch only rarely',
+  'offer short, sparse gestures with silence between them',
+  'shadow another player, entering just after they do',
+  'hold a high, quiet sustained tone',
+  'lay a low foundation and stay beneath the ensemble',
+  'punctuate the texture with sudden accents, then withdraw',
+  'mirror and answer whoever is most active',
+  'keep a steady repeating figure as an anchor for the others',
+  'drift slowly between two neighbouring pitches',
+  'stay mostly silent; enter only at the peaks',
+  'contribute noise and texture rather than clear pitch',
+  'lead — set a pace and shape that the others follow',
+];
+
+/**
+ * Occasionally break a section into individual per-voice instructions.
+ * Only meaningful with 2+ voices; happens on some sections, not all.
+ * Returns null or [{ label, text }] of length `voices`.
+ */
+function maybeBuildVoiceInstructions(rng, { voices, sectionIndex }) {
+  if (voices < 2) return null;
+  let p = 0.32;
+  if (sectionIndex === 0) p -= 0.12; // keep the opening unified more often
+  if (!chance(rng, Math.max(0.05, p))) return null;
+
+  const roles = shuffle(rng, VOICE_ROLES);
+  return Array.from({ length: voices }, (_, i) => ({
+    label: `Voice ${i + 1}`,
+    text: capitalize(roles[i % roles.length]) + '.',
+  }));
+}
+
+/** Normalize pitch-material input into a non-empty array of valid keys. */
+function normalizePitchSets(pitchSets, pitchSet) {
+  let arr = Array.isArray(pitchSets) ? pitchSets : pitchSet ? [pitchSet] : [];
+  arr = [...new Set(arr.filter((k) => PITCH_SETS[k]))];
+  return arr.length ? arr : ['free'];
+}
+
 function buildSectionText(rng, { moodDef, energy, pitchSet, dynamicRange, silenceRatio, techniques, sectionIndex, sectionCount, hasVisual }) {
   const isFirst = sectionIndex === 0;
   const isLast = sectionIndex === sectionCount - 1;
@@ -453,7 +504,9 @@ function sectionDurationNote(totalMinutes, sectionCount) {
  * @param {string} input.energy        - key of ENERGY_LEVELS
  * @param {number} input.sectionCount  - number of sections (1–10)
  * @param {number} input.totalMinutes  - approximate total duration
- * @param {string} input.pitchSet      - key of PITCH_SETS (verbal constraint)
+ * @param {Array}  input.pitchSets     - keys of PITCH_SETS (verbal constraint); when
+ *                                       several are chosen, sections vary between them.
+ *                                       (Legacy `input.pitchSet` string is still accepted.)
  * @param {Array}  input.dynamicRange  - [loIndex, hiIndex] into DYNAMIC_LADDER
  * @param {number} input.silenceRatio  - 0..1, proportion of silence
  * @param {Array}  input.techniques    - keys of TECHNIQUES
@@ -467,7 +520,8 @@ export function generatePrompt(input) {
     energy = 'medium',
     sectionCount = 3,
     totalMinutes = 9,
-    pitchSet = 'free',
+    pitchSet,
+    pitchSets,
     dynamicRange = [1, 4],
     silenceRatio = 0.3,
     techniques = [],
@@ -478,15 +532,21 @@ export function generatePrompt(input) {
   const moodDef = MOODS[mood] || MOODS.meditative;
   const count = Math.max(1, Math.min(10, sectionCount));
   const voices = Math.max(1, Math.min(12, voiceCount));
+  const selectedPitchSets = normalizePitchSets(pitchSets, pitchSet);
 
   const sections = [];
   for (let s = 0; s < count; s++) {
+    // With several pitch collections chosen, each section draws one — giving
+    // variety across the piece; with one chosen, every section uses it.
+    const sectionPitchSet = pick(rng, selectedPitchSets);
+
     const visual = maybeBuildVisual(rng, {
       moodDef, energy, techniques, silenceRatio, dynamicRange, sectionIndex: s,
     });
+    const voiceInstructions = maybeBuildVoiceInstructions(rng, { voices, sectionIndex: s });
 
     const { performanceNote, instructionBlocks } = buildSectionText(rng, {
-      moodDef, energy, pitchSet, dynamicRange, silenceRatio, techniques,
+      moodDef, energy, pitchSet: sectionPitchSet, dynamicRange, silenceRatio, techniques,
       sectionIndex: s, sectionCount: count, hasVisual: !!visual,
     });
 
@@ -496,12 +556,21 @@ export function generatePrompt(input) {
       durationNote: sectionDurationNote(totalMinutes, count),
       performanceNote,
       instructionBlocks,
+      voiceInstructions, // null, or [{ label, text }]
       visual, // null, or { width, height, marks[] }
     });
   }
 
-  const pitchLabel = (PITCH_SETS[pitchSet] || PITCH_SETS.free).label;
-  const tags = [...new Set([...moodDef.tags, pitchLabel.toLowerCase(), `${energy} energy`, 'generated'])];
+  const pitchLabels = selectedPitchSets.map((k) => PITCH_SETS[k].label);
+  const pitchDesc = pitchLabels.length === 1
+    ? `${pitchLabels[0].toLowerCase()} pitch material`
+    : `varied pitch material (${pitchLabels.join(', ').toLowerCase()})`;
+  const tags = [...new Set([
+    ...moodDef.tags,
+    ...pitchLabels.map((l) => l.toLowerCase()),
+    `${energy} energy`,
+    'generated',
+  ])];
 
   return {
     id: `prompt-${seed}`,
@@ -509,7 +578,7 @@ export function generatePrompt(input) {
     composer: 'OpenScore (generated)',
     year: new Date().getFullYear(),
     duration: `ca. ${Math.round(totalMinutes * 0.85)}–${Math.round(totalMinutes * 1.15)}'`,
-    description: `A generated improvisational prompt for ${voices} ${voices === 1 ? 'voice' : 'voices'}. Character: ${moodDef.label.toLowerCase()}, ${energy} energy, ${pitchLabel.toLowerCase()} pitch material.`,
+    description: `A generated improvisational prompt for ${voices} ${voices === 1 ? 'voice' : 'voices'}. Character: ${moodDef.label.toLowerCase()}, ${energy} energy, ${pitchDesc}.`,
     tags,
     seed,
     input: { ...input, voiceCount: voices },
