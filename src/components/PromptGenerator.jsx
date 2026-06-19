@@ -103,7 +103,7 @@ export default function PromptGenerator() {
         </p>
       </header>
 
-      <main className="px-8 py-10 max-w-4xl mx-auto space-y-12">
+      <main className="px-8 py-10 max-w-4xl space-y-12">
         {/* ── Ensemble ── */}
         <Section title="1 · Ensemble">
           <Field label="Voices / players">
