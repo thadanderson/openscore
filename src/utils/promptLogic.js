@@ -40,6 +40,14 @@ export function randomSeed() {
 const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 const chance = (rng, p) => rng() < p;
 const range = (rng, lo, hi) => lo + rng() * (hi - lo);
+// Pick a line not yet used in this prompt; falls back to the full pool once
+// every option has been spent. `used` is a Set shared across the whole prompt.
+const pickUnique = (rng, pool, used) => {
+  const fresh = pool.filter((x) => !used.has(x));
+  const choice = pick(rng, fresh.length ? fresh : pool);
+  used.add(choice);
+  return choice;
+};
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const shuffle = (rng, arr) => {
   const a = [...arr];
@@ -99,19 +107,69 @@ export const ENERGY_LEVELS = {
   low: {
     label: 'Low — sparse & sustained',
     density: 0.3,
-    text: 'Let long durations stretch beyond what is comfortable; events are rare and deliberate.',
+    texts: [
+      'Let long durations stretch beyond what is comfortable; events are rare and deliberate.',
+      'Keep everything slow and sustained — let sounds last longer than feels natural.',
+      'Move sparingly: a few well-placed sounds with wide space around them.',
+      'Hold back. Most of the time, do nothing.',
+    ],
   },
   medium: {
     label: 'Medium — flowing',
     density: 0.6,
-    text: 'Keep a steady flow of activity, neither hurried nor static.',
+    texts: [
+      'Keep a steady flow of activity, neither hurried nor static.',
+      'Maintain a moderate, breathing pace with room to shift.',
+      'Stay in gentle motion; let phrases come and go without rushing.',
+      'Keep things moving, but never force the pace.',
+    ],
   },
   high: {
     label: 'High — active & dense',
     density: 1.0,
-    text: 'Keep the activity continuous and dense; avoid letting the texture thin out.',
+    texts: [
+      'Keep the activity continuous and dense; avoid letting the texture thin out.',
+      'Sustain a high level of energy — keep events tumbling over one another.',
+      'Stay busy and propulsive; there should always be something happening.',
+      'Crowd the texture. Leave little room to breathe.',
+    ],
   },
 };
+
+/**
+ * Mood-agnostic prose pools mixed into any prompt for combinatorial variety.
+ * INTERACTION (how players relate), TEXTURE (how material develops), and
+ * ENDINGS (last-section close) apply across all moods.
+ */
+const INTERACTION = [
+  'Leave space for others; never crowd the texture.',
+  'Respond to what you hear rather than to a plan.',
+  'Let one player lead for a while, then yield to another.',
+  'Match someone else’s sound, then slowly diverge from it.',
+  'Enter and drop out independently; avoid moving as a block.',
+  'Build on the last thing you heard before adding anything new.',
+  'Trade the foreground back and forth — no one should dominate.',
+  'If two of you land on the same idea, hold it together briefly.',
+];
+
+const TEXTURE = [
+  'Let the texture thicken and thin over the course of the section.',
+  'Find one small idea and slowly transform it.',
+  'Allow a single sustained layer to persist beneath the activity.',
+  'Repeat material with small changes each time it returns.',
+  'Let the register gradually rise, or gradually fall, across the section.',
+  'Move between dense clusters and bare single lines.',
+  'Keep one element constant while everything else changes around it.',
+  'Let the music arrive somewhere different from where it began.',
+];
+
+const ENDINGS = [
+  'Bring the piece to rest gradually — the ending should feel inevitable, not abrupt.',
+  'Thin the texture until only one sound remains, then let it fade.',
+  'Let the music dissolve rather than stop; trail off into silence.',
+  'Converge on a single shared sound and sustain it to the end.',
+  'Withdraw one voice at a time until the room is silent.',
+];
 
 /**
  * Eight moods. `opening`/`listening` fragments compose the written prompt;
@@ -130,6 +188,8 @@ export const MOODS = {
       'Listen more than you play; let silences breathe.',
       'Match the resonance of the room before adding to it.',
       'Hold each sound until it fully decays before moving on.',
+      'Let sounds emerge from silence and return to it.',
+      'Treat each note as complete in itself; nothing needs to lead anywhere.',
     ],
     tags: ['meditative', 'sustained', 'quiet'],
   },
@@ -145,6 +205,8 @@ export const MOODS = {
       'Push against one another; let friction build.',
       'Interrupt, overlap, and contradict the prevailing texture.',
       'Surge and collapse; never hold a stable plateau for long.',
+      'As soon as something stabilises, disturb it.',
+      'Let intensity spike and crash unpredictably.',
     ],
     tags: ['turbulent', 'dense', 'volatile'],
   },
@@ -160,6 +222,8 @@ export const MOODS = {
       'Imitate and answer one another; keep it conversational.',
       'Surprise the ensemble, then make room for someone to surprise you.',
       'Let ideas mutate as they pass between players.',
+      'Keep a light touch; nothing is too precious to discard.',
+      'Follow a tangent and see where it leads the group.',
     ],
     tags: ['playful', 'interactive', 'light'],
   },
@@ -175,6 +239,8 @@ export const MOODS = {
       'Keep gestures spare and deliberate.',
       'Favour restraint; one well-placed sound over many.',
       'Leave the architecture exposed — silence is part of the form.',
+      'Resist the urge to fill space; trust the bare materials.',
+      'Let each sound stand alone, unhurried and unadorned.',
     ],
     tags: ['austere', 'spare', 'minimal'],
   },
@@ -190,6 +256,8 @@ export const MOODS = {
       'Keep a shared, processional pulse beneath everything.',
       'Repeat gestures with small variation, like a rite being observed.',
       'Let each entrance feel formal and intended.',
+      'Observe each gesture as though it carries weight.',
+      'Return to the same material as if performing a rite.',
     ],
     tags: ['ceremonial', 'ritual', 'processional'],
   },
@@ -205,6 +273,8 @@ export const MOODS = {
       'Favour bright timbres and ringing overtones.',
       'Let textures shimmer and refract rather than settle.',
       'Build halos of sound around one another.',
+      'Keep the texture bright and ringing; avoid heaviness.',
+      'Let overtones bloom and hang in the air.',
     ],
     tags: ['luminous', 'bright', 'shimmering'],
   },
@@ -220,6 +290,8 @@ export const MOODS = {
       'Stay strictly in time; treat the pulse as non-negotiable.',
       'Interlock your pattern precisely with the others.',
       'Allow the mechanism to phase and grind, but never to relax.',
+      'Subdivide time evenly; let the grid stay audible.',
+      'Phase your pattern against the others without breaking it.',
     ],
     tags: ['mechanical', 'rhythmic', 'relentless'],
   },
@@ -235,6 +307,8 @@ export const MOODS = {
       'Keep dynamics low and let sounds appear and vanish.',
       'Leave long, dark silences between distant gestures.',
       'Favour low, veiled timbres and soft attacks.',
+      'Keep sounds low, soft, and distant.',
+      'Let long darknesses separate faint, isolated events.',
     ],
     tags: ['nocturnal', 'dark', 'distant'],
   },
@@ -397,12 +471,47 @@ export function buildVisual(rng, { moodDef, energy, techniques, silenceRatio, dy
 // Text generation
 // ─────────────────────────────────────────────────────────────────────────
 
-function silenceText(ratio) {
-  if (ratio < 0.15) return 'Sound is nearly continuous; rests are brief.';
-  if (ratio < 0.35) return 'Balance sound and silence — let space punctuate the texture.';
-  if (ratio < 0.55) return 'Silence is structural; there is often more silence than sound.';
-  return 'Silence dominates — each sound is a rare, deliberate event.';
+function silenceText(rng, ratio) {
+  let pool;
+  if (ratio < 0.15) pool = [
+    'Sound is nearly continuous; rests are brief.',
+    'Keep the sound almost unbroken — silence only in passing.',
+  ];
+  else if (ratio < 0.35) pool = [
+    'Balance sound and silence — let space punctuate the texture.',
+    'Give silence equal weight; let gaps shape the phrasing.',
+  ];
+  else if (ratio < 0.55) pool = [
+    'Silence is structural; there is often more silence than sound.',
+    'Let silence dominate the form — sound is the exception, not the rule.',
+  ];
+  else pool = [
+    'Silence dominates — each sound is a rare, deliberate event.',
+    'Mostly silence. A single sound can fill the whole space.',
+  ];
+  return pick(rng, pool);
 }
+
+function dynamicsText(rng, dynamicRange) {
+  const lo = DYNAMIC_LADDER[Math.min(dynamicRange[0], dynamicRange[1])];
+  const hi = DYNAMIC_LADDER[Math.max(dynamicRange[0], dynamicRange[1])];
+  if (lo === hi) return pick(rng, [
+    `Stay at ${lo} throughout.`,
+    `Hold a constant ${lo}; neither swell nor fade.`,
+    `Keep a steady ${lo} across the whole section.`,
+  ]);
+  return pick(rng, [
+    `Dynamics range from ${lo} to ${hi}; never exceed ${hi}.`,
+    `Move freely between ${lo} and ${hi}, but no louder than ${hi}.`,
+    `Let the volume drift across ${lo}–${hi}, with ${hi} as the ceiling.`,
+  ]);
+}
+
+const GRAPHIC_GUIDANCE = [
+  'Read the graphic above as a loose map, not a script: left-to-right suggests time, height suggests register or intensity, and the weight of each mark suggests its force. Interpret it freely and in your own way.',
+  'The graphic above is a score to interpret, not to read literally — let position, height, and weight suggest timing, register, and force. Find your own path through it.',
+  'Treat the graphic above as a landscape to move through: across is time, up is higher or more intense, heavier marks are stronger events. Your reading need not match anyone else’s.',
+];
 
 /** Instrument-agnostic per-voice roles, assigned when a section breaks out
  *  individual instructions for each player. */
@@ -446,28 +555,33 @@ function normalizePitchSets(pitchSets, pitchSet) {
   return arr.length ? arr : ['free'];
 }
 
-function buildSectionText(rng, { moodDef, energy, pitchSet, dynamicRange, silenceRatio, techniques, sectionIndex, sectionCount, hasVisual }) {
+function buildSectionText(rng, { moodDef, energy, pitchSet, dynamicRange, silenceRatio, techniques, sectionIndex, sectionCount, hasVisual, used }) {
   const isFirst = sectionIndex === 0;
   const isLast = sectionIndex === sectionCount - 1;
   const energyDef = ENERGY_LEVELS[energy] || ENERGY_LEVELS.medium;
 
+  // The performance note is assembled from several pools, with which sentences
+  // appear (and in what combination) varied per section. `pickUnique` keeps a
+  // prompt from repeating the same sentence, and the optional lines randomise
+  // the shape so no two sections read the same way.
+  // Each optional sentence is drawn from a *different* pool, so a section
+  // never repeats a line within itself; the global `used` set further reduces
+  // repeats across the whole prompt.
   const lines = [];
-  lines.push(isFirst ? pick(rng, moodDef.opening) : pick(rng, moodDef.listening));
-  lines.push(pick(rng, moodDef.listening));
-  lines.push(energyDef.text);
-  if (isLast) lines.push('Bring the piece to rest gradually — the ending should feel inevitable, not abrupt.');
+  lines.push(isFirst ? pickUnique(rng, moodDef.opening, used) : pickUnique(rng, moodDef.listening, used));
+  if (chance(rng, 0.8)) lines.push(pickUnique(rng, pick(rng, [INTERACTION, TEXTURE]), used));
+  if (chance(rng, 0.65)) lines.push(pickUnique(rng, energyDef.texts, used));
+  if (isLast) lines.push(pickUnique(rng, ENDINGS, used));
   const performanceNote = lines.join(' ');
 
   const blocks = [];
 
-  // Constraints summary.
+  // Constraints summary — pitch material plus varied dynamics / silence phrasing.
   const pitch = (PITCH_SETS[pitchSet] || PITCH_SETS.free).instruction;
-  const dynLo = DYNAMIC_LADDER[Math.min(dynamicRange[0], dynamicRange[1])];
-  const dynHi = DYNAMIC_LADDER[Math.max(dynamicRange[0], dynamicRange[1])];
-  const dynText = dynLo === dynHi
-    ? `Stay at ${dynLo} throughout.`
-    : `Dynamics range from ${dynLo} to ${dynHi}; never exceed ${dynHi}.`;
-  blocks.push({ position: 'instruction', text: `${pitch} ${dynText} ${silenceText(silenceRatio)}` });
+  blocks.push({
+    position: 'instruction',
+    text: `${pitch} ${dynamicsText(rng, dynamicRange)} ${silenceText(rng, silenceRatio)}`,
+  });
 
   // Techniques.
   const techLines = techniques.map((t) => TECHNIQUES[t]).filter(Boolean);
@@ -475,10 +589,7 @@ function buildSectionText(rng, { moodDef, energy, pitchSet, dynamicRange, silenc
 
   // Guidance for interpreting a graphic, when present.
   if (hasVisual) {
-    blocks.push({
-      position: 'instruction',
-      text: 'Read the graphic above as a loose map, not a script: left-to-right suggests time, height suggests register or intensity, and the weight of each mark suggests its force. Interpret it freely and in your own way.',
-    });
+    blocks.push({ position: 'instruction', text: pick(rng, GRAPHIC_GUIDANCE) });
   }
 
   return { performanceNote, instructionBlocks: blocks };
@@ -534,6 +645,9 @@ export function generatePrompt(input) {
   const voices = Math.max(1, Math.min(12, voiceCount));
   const selectedPitchSets = normalizePitchSets(pitchSets, pitchSet);
 
+  // Shared across the whole prompt so the same prose line is not reused twice.
+  const used = new Set();
+
   const sections = [];
   for (let s = 0; s < count; s++) {
     // With several pitch collections chosen, each section draws one — giving
@@ -547,7 +661,7 @@ export function generatePrompt(input) {
 
     const { performanceNote, instructionBlocks } = buildSectionText(rng, {
       moodDef, energy, pitchSet: sectionPitchSet, dynamicRange, silenceRatio, techniques,
-      sectionIndex: s, sectionCount: count, hasVisual: !!visual,
+      sectionIndex: s, sectionCount: count, hasVisual: !!visual, used,
     });
 
     sections.push({
