@@ -88,7 +88,7 @@ export default function PromptGenerator() {
     <div className="min-h-screen bg-[#f7f4ef] text-stone-900 font-sans">
       <header className="border-b border-stone-200 px-8 py-8">
         <h1 className="font-serif text-4xl font-normal text-stone-900 tracking-tight">
-          /OpenScore
+          <span className="text-[#d97706]">/</span>OpenScore
         </h1>
         <p className="text-stone-400 text-sm mt-1">
           developed by{' '}
