@@ -241,7 +241,7 @@ export default function PromptGenerator() {
         <div className="border-t border-stone-200 pt-8">
           <button
             onClick={handleGenerate}
-            className="bg-stone-900 text-stone-50 px-10 py-4 text-lg font-medium hover:bg-stone-700 transition-colors"
+            className="bg-stone-900 text-stone-50 px-10 py-4 text-lg font-medium rounded hover:bg-stone-700 transition-colors"
           >
             Generate Performance Prompt →
           </button>
