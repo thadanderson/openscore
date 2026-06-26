@@ -87,7 +87,7 @@ export default function PromptGenerator() {
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-stone-900 font-sans">
       <header className="border-b border-stone-200">
-        <div className="max-w-6xl px-8 lg:px-16 py-8">
+        <div className="max-w-4xl mx-auto px-8 py-8">
         <h1 className="font-serif text-4xl font-normal text-stone-900 tracking-tight">
           <span className="text-[#d97706]">/</span>OpenScore
         </h1>
@@ -113,7 +113,7 @@ export default function PromptGenerator() {
         </div>
       </header>
 
-      <main className="max-w-6xl px-8 lg:px-16 py-10 space-y-12">
+      <main className="max-w-4xl mx-auto px-8 py-10 space-y-12">
         {/* ── Ensemble ── */}
         <Section title="1 — Ensemble">
           <Field label="Voices / players">
