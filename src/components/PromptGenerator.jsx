@@ -91,7 +91,7 @@ export default function PromptGenerator() {
           /OpenScore
         </h1>
         <p className="text-stone-400 text-sm mt-1">
-          Developed by{' '}
+          developed by{' '}
           <a
             href="https://thadanderson.com"
             target="_blank"
