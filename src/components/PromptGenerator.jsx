@@ -104,14 +104,14 @@ export default function PromptGenerator() {
         <p className="font-serif text-2xl text-stone-800 mt-5">
           Generate. Prompt. Perform.
         </p>
-        <p className="text-stone-500 mt-2 max-w-2xl">
+        <p className="text-stone-500 mt-2">
           Use the following parameters to set the ensemble, character, shape, and other
           performance elements. OpenScore creates a guided-improvisation score of written
           instructions, with the occasional visual graphics to interpret, ready to read on screen.
         </p>
       </header>
 
-      <main className="px-8 py-10 max-w-4xl space-y-12">
+      <main className="px-8 py-10 space-y-12">
         {/* ── Ensemble ── */}
         <Section title="1 — Ensemble">
           <Field label="Voices / players">
